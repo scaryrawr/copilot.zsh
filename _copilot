@@ -1,0 +1,98 @@
+#compdef copilot
+
+# Zsh completion for GitHub Copilot CLI
+
+_copilot() {
+    local -a options commands help_topics log_levels models stream_modes
+
+    options=(
+        '--add-dir[Add a directory to the allowed list for file access]:directory:_directories'
+        '--additional-mcp-config[Additional MCP servers configuration]:config'
+        '--agent[Specify a custom agent to use]:agent'
+        '--allow-all-paths[Disable file path verification and allow access to any path]'
+        '--allow-all-tools[Allow all tools to run automatically without confirmation]'
+        '--allow-tool[Allow specific tools]:tools'
+        '--banner[Show the startup banner]'
+        '--continue[Resume the most recent session]'
+        '--deny-tool[Deny specific tools]:tools'
+        '--disable-builtin-mcps[Disable all built-in MCP servers]'
+        '--disable-mcp-server[Disable a specific MCP server]:server'
+        '--disable-parallel-tools-execution[Disable parallel execution of tools]'
+        '--disallow-temp-dir[Prevent automatic access to the system temporary directory]'
+        '--enable-all-github-mcp-tools[Enable all GitHub MCP server tools]'
+        '(-h --help)'{-h,--help}'[Display help for command]'
+        '--log-dir[Set log file directory]:directory:_directories'
+        '--log-level[Set the log level]:level:->log_levels'
+        '--model[Set the AI model to use]:model:->models'
+        '--no-color[Disable all color output]'
+        '--no-custom-instructions[Disable loading of custom instructions from AGENTS.md]'
+        '(-p --prompt)'{-p,--prompt}'[Execute a prompt directly without interactive mode]:prompt'
+        '--resume[Resume from a previous session]:session_id'
+        '--screen-reader[Enable screen reader optimizations]'
+        '--stream[Enable or disable streaming mode]:mode:->stream_modes'
+        '(-v --version)'{-v,--version}'[Show version information]'
+    )
+
+    commands=(
+        'help:Display help information'
+    )
+
+    help_topics=(
+        'config:Configuration Settings'
+        'commands:Interactive Mode Commands'
+        'environment:Environment Variables'
+        'logging:Logging'
+        'permissions:Tool Permissions'
+    )
+
+    log_levels=(
+        'none:No logging'
+        'error:Error level'
+        'warning:Warning level'
+        'info:Info level'
+        'debug:Debug level'
+        'all:All levels'
+        'default:Default level'
+    )
+
+    models=(
+        'claude-sonnet-4.5:Claude Sonnet 4.5'
+        'claude-sonnet-4:Claude Sonnet 4'
+        'claude-haiku-4.5:Claude Haiku 4.5'
+        'gpt-5:GPT-5'
+    )
+
+    stream_modes=(
+        'on:Enable streaming'
+        'off:Disable streaming'
+    )
+
+    _arguments -C \
+        $options \
+        '1: :->cmds' \
+        '*::arg:->args'
+
+    case $state in
+        cmds)
+            _describe -t commands 'copilot commands' commands
+            ;;
+        args)
+            case $words[1] in
+                help)
+                    _describe -t help-topics 'help topics' help_topics
+                    ;;
+            esac
+            ;;
+        log_levels)
+            _describe -t log-levels 'log levels' log_levels
+            ;;
+        models)
+            _describe -t models 'AI models' models
+            ;;
+        stream_modes)
+            _describe -t stream-modes 'streaming modes' stream_modes
+            ;;
+    esac
+}
+
+_copilot "$@"
