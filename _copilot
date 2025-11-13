@@ -1,4 +1,4 @@
-#compdef copilot
+#compdef copilot yopilot
 
 # Zsh completion for GitHub Copilot CLI
 
