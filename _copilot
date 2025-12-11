@@ -21,6 +21,7 @@ _copilot() {
         '--disallow-temp-dir[Prevent automatic access to the system temporary directory]'
         '--enable-all-github-mcp-tools[Enable all GitHub MCP server tools]'
         '(-h --help)'{-h,--help}'[Display help for command]'
+        '(-i --interactive)'{-i,--interactive}'[Start interactive mode and automatically execute this prompt]:prompt'
         '--log-dir[Set log file directory]:directory:_directories'
         '--log-level[Set the log level]:level:->log_levels'
         '--model[Set the AI model to use]:model:->models'
@@ -56,10 +57,18 @@ _copilot() {
     )
 
     models=(
+        'claude-opus-4.5:Claude Opus 4.5'
         'claude-sonnet-4.5:Claude Sonnet 4.5'
         'claude-sonnet-4:Claude Sonnet 4'
         'claude-haiku-4.5:Claude Haiku 4.5'
         'gpt-5:GPT-5'
+        'gpt-5.1:GPT-5.1'
+        'gpt-5.1-codex-mini:GPT-5.1 Codex Mini'
+        'gpt-5.1-codex-max:GPT-5.1 Codex Max'
+        'gpt-5.1-codex:GPT-5.1 Codex'
+        'gpt-5-mini:GPT-5 Mini'
+        'gpt-4.1:GPT-4.1'
+        'gemini-3-pro-preview:Gemini 3 Pro Preview'
     )
 
     stream_modes=(
