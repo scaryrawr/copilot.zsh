@@ -40,7 +40,7 @@ antidote install scaryrawr/copilot.zsh
 Full command-line completions for the `copilot` command, including:
 
 - All command-line options and flags
-- Model selection (`--model`)
+- Model selection (`--model`, dynamically extracted from `copilot --help`)
 - Log levels (`--log-level`)
 - Streaming options (`--stream`)
 - Help topics

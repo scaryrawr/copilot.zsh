@@ -2,6 +2,31 @@
 
 # Zsh completion for GitHub Copilot CLI
 
+_copilot__models_from_help() {
+    local help line rest
+    local -a out
+    local capturing=0
+
+    help="$(_call_program copilot-help copilot --help 2>/dev/null)"
+    [[ -z $help ]] && return 0
+
+    for line in "${(@f)help}"; do
+        if (( !capturing )) && [[ $line == *"--model <model>"*"(choices:"* ]]; then
+            capturing=1
+        fi
+        if (( capturing )); then
+            rest="$line"
+            while [[ $rest =~ '"([^"]+)"' ]]; do
+                out+=("${match[1]}")
+                rest=${rest#*\"${match[1]}\"}
+            done
+            [[ $line == *")"* ]] && break
+        fi
+    done
+
+    (( ${#out} )) && print -l -- $out
+}
+
 _copilot() {
     local -a options commands help_topics log_levels models stream_modes
 
@@ -56,6 +81,7 @@ _copilot() {
         'default:Default level'
     )
 
+    # Fallback list; prefer dynamic extraction from `copilot --help` at completion time.
     models=(
         'claude-opus-4.5:Claude Opus 4.5'
         'claude-sonnet-4.5:Claude Sonnet 4.5'
@@ -96,7 +122,13 @@ _copilot() {
             _describe -t log-levels 'log levels' log_levels
             ;;
         models)
-            _describe -t models 'AI models' models
+            local -a dyn_models
+            dyn_models=("${(@f)$(_copilot__models_from_help)}")
+            if (( ${#dyn_models} )); then
+                _describe -t models 'AI models' dyn_models
+            else
+                _describe -t models 'AI models' models
+            fi
             ;;
         stream_modes)
             _describe -t stream-modes 'streaming modes' stream_modes
@@ -104,4 +136,7 @@ _copilot() {
     esac
 }
 
-_copilot "$@"
+# Only execute in completion context.
+if (( $+compstate )); then
+    _copilot "$@"
+fi
