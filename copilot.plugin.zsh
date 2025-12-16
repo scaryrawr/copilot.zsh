@@ -8,3 +8,7 @@ fpath=(${0:A:h} $fpath)
 yopilot() {
     copilot --allow-all-tools --allow-all-paths "$@"
 }
+
+copilot() {
+    command copilot --disable-mcp-server github-mcp-server "$@"
+}
