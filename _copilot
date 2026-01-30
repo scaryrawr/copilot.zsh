@@ -136,9 +136,11 @@ _copilot() {
             _describe -t commands 'copilot commands' commands
             ;;
         args)
-            case $words[1] in
+            case $words[2] in
                 help)
-                    _describe -t help-topics 'help topics' help_topics
+                    local -a help_items
+                    help_items=($commands $help_topics)
+                    _describe -t help-topics 'help topics' help_items
                     ;;
             esac
             ;;
