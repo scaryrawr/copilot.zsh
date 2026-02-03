@@ -81,6 +81,8 @@ _copilot() {
     commands=(
         'help:Display help information'
         'init:Initialize Copilot instructions for this repository'
+        'login:Authenticate with Copilot via OAuth device flow'
+        'plugin:Manage plugins and plugin marketplaces'
         'update:Download the latest version'
         'version:Display version information and check for updates'
     )
@@ -126,6 +128,34 @@ _copilot() {
         'off:Disable streaming'
     )
 
+    local -a plugin_commands plugin_marketplace_commands login_options plugin_options
+
+    plugin_commands=(
+        'install:Install a plugin'
+        'uninstall:Uninstall a plugin'
+        'update:Update a plugin to the latest version'
+        'list:List installed plugins'
+        'marketplace:Manage plugin marketplaces'
+    )
+
+    plugin_marketplace_commands=(
+        'add:Add a marketplace'
+        'remove:Remove a marketplace'
+        'list:List registered marketplaces'
+        'browse:Browse plugins in a marketplace'
+    )
+
+    login_options=(
+        '--host[GitHub host URL]:host'
+        '--config-dir[Set the configuration directory]:directory:_directories'
+        '(-h --help)'{-h,--help}'[Display help for command]'
+    )
+
+    plugin_options=(
+        '--config-dir[Path to the configuration directory]:directory:_directories'
+        '(-h --help)'{-h,--help}'[Display help for command]'
+    )
+
     _arguments -C \
         $options \
         '1: :->cmds' \
@@ -136,11 +166,55 @@ _copilot() {
             _describe -t commands 'copilot commands' commands
             ;;
         args)
-            case $words[2] in
+            case $words[1] in
                 help)
                     local -a help_items
                     help_items=($commands $help_topics)
                     _describe -t help-topics 'help topics' help_items
+                    ;;
+                login)
+                    _arguments $login_options
+                    ;;
+                plugin)
+                    case $words[2] in
+                        install)
+                            _arguments $plugin_options ':source:'
+                            ;;
+                        uninstall)
+                            _arguments $plugin_options ':name:'
+                            ;;
+                        update)
+                            _arguments $plugin_options ':name:'
+                            ;;
+                        list)
+                            _arguments $plugin_options
+                            ;;
+                        marketplace)
+                            case $words[3] in
+                                add)
+                                    _arguments $plugin_options ':source:'
+                                    ;;
+                                remove)
+                                    _arguments \
+                                        '(-f --force)'{-f,--force}'[Force removal even if plugins are installed]' \
+                                        $plugin_options \
+                                        ':name:'
+                                    ;;
+                                list)
+                                    _arguments $plugin_options
+                                    ;;
+                                browse)
+                                    _arguments $plugin_options ':name:'
+                                    ;;
+                                *)
+                                    _describe -t plugin-marketplace-commands 'plugin marketplace commands' plugin_marketplace_commands
+                                    ;;
+                            esac
+                            ;;
+                        *)
+                            _describe -t plugin-commands 'plugin commands' plugin_commands
+                            ;;
+                    esac
                     ;;
             esac
             ;;
