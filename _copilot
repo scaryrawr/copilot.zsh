@@ -27,6 +27,79 @@ _copilot__models_from_help() {
     (( ${#out} )) && print -l -- $out
 }
 
+_copilot__installed_plugins() {
+    local output line name
+    output="$(_call_program copilot-plugins copilot plugin list 2>/dev/null)"
+    [[ -z $output ]] && return 0
+    for line in "${(@f)output}"; do
+        if [[ $line == *•* ]]; then
+            name="${line#*• }"
+            name="${name%% *}"
+            [[ -n $name ]] && print -- "$name"
+        fi
+    done
+}
+
+_copilot__marketplaces() {
+    local output line name desc
+    output="$(_call_program copilot-marketplaces copilot plugin marketplace list 2>/dev/null)"
+    [[ -z $output ]] && return 0
+    for line in "${(@f)output}"; do
+        if [[ $line == *•* ]]; then
+            name="${line#*• }"
+            desc="${name#* }"
+            name="${name%% *}"
+            # strip surrounding parens from description
+            desc="${desc#\(}"
+            desc="${desc%\)}"
+            [[ -n $name ]] && print -- "${name}:${desc}"
+        fi
+    done
+}
+
+_copilot__browsable_plugins() {
+    local marketplace="$1" output line name desc
+    output="$(_call_program copilot-browse copilot plugin marketplace browse "$marketplace" 2>/dev/null)"
+    [[ -z $output ]] && return 0
+    for line in "${(@f)output}"; do
+        if [[ $line == *•* ]]; then
+            name="${line#*• }"
+            # format: "name - description"
+            desc="${name#* - }"
+            name="${name%% - *}"
+            name="${name%% *}"
+            [[ -n $name ]] && print -- "${name}@${marketplace}:${desc}"
+        fi
+    done
+}
+
+_copilot__installable_plugins() {
+    local -a marketplaces
+    marketplaces=("${(@f)$(_copilot__marketplaces)}")
+    local mp
+    for mp in $marketplaces; do
+        _copilot__browsable_plugins "${mp%%:*}"
+    done
+}
+
+_copilot__complete_installed_plugins() {
+    local -a plugins
+    plugins=("${(@f)$(_copilot__installed_plugins)}")
+    (( ${#plugins} )) && _describe -t plugins 'installed plugins' plugins
+}
+
+_copilot__complete_installable_plugins() {
+    local -a plugins
+    plugins=("${(@f)$(_copilot__installable_plugins)}")
+    (( ${#plugins} )) && _describe -t plugins 'available plugins' plugins
+}
+
+_copilot__complete_marketplaces() {
+    local -a mkts
+    mkts=("${(@f)$(_copilot__marketplaces)}")
+    (( ${#mkts} )) && _describe -t marketplaces 'registered marketplaces' mkts
+}
+
 _copilot() {
     local -a options commands help_topics log_levels models stream_modes
 
@@ -92,7 +165,7 @@ _copilot() {
         'commands:Interactive Mode Commands'
         'environment:Environment Variables'
         'logging:Logging'
-        'permissions:Tool Permissions'
+        'permissions:Permissions'
     )
 
     log_levels=(
@@ -109,6 +182,7 @@ _copilot() {
     models=(
         'claude-sonnet-4.5:Claude Sonnet 4.5'
         'claude-haiku-4.5:Claude Haiku 4.5'
+        'claude-opus-4.6:Claude Opus 4.6'
         'claude-opus-4.5:Claude Opus 4.5'
         'claude-sonnet-4:Claude Sonnet 4'
         'gemini-3-pro-preview:Gemini 3 Pro Preview'
@@ -168,9 +242,7 @@ _copilot() {
         args)
             case $words[1] in
                 help)
-                    local -a help_items
-                    help_items=($commands $help_topics)
-                    _describe -t help-topics 'help topics' help_items
+                    _describe -t help-topics 'help topics' help_topics
                     ;;
                 login)
                     _arguments $login_options
@@ -178,13 +250,13 @@ _copilot() {
                 plugin)
                     case $words[2] in
                         install)
-                            _arguments $plugin_options ':source:'
+                            _arguments $plugin_options ':source:_copilot__complete_installable_plugins'
                             ;;
                         uninstall)
-                            _arguments $plugin_options ':name:'
+                            _arguments $plugin_options ':name:_copilot__complete_installed_plugins'
                             ;;
                         update)
-                            _arguments $plugin_options ':name:'
+                            _arguments $plugin_options ':name:_copilot__complete_installed_plugins'
                             ;;
                         list)
                             _arguments $plugin_options
@@ -198,13 +270,13 @@ _copilot() {
                                     _arguments \
                                         '(-f --force)'{-f,--force}'[Force removal even if plugins are installed]' \
                                         $plugin_options \
-                                        ':name:'
+                                        ':name:_copilot__complete_marketplaces'
                                     ;;
                                 list)
                                     _arguments $plugin_options
                                     ;;
                                 browse)
-                                    _arguments $plugin_options ':name:'
+                                    _arguments $plugin_options ':name:_copilot__complete_marketplaces'
                                     ;;
                                 *)
                                     _describe -t plugin-marketplace-commands 'plugin marketplace commands' plugin_marketplace_commands
