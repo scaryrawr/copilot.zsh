@@ -6,7 +6,7 @@ fpath=(${0:A:h} $fpath)
 
 # YOLO mode function
 yopilot() {
-    copilot --allow-all-tools --allow-all-paths "$@"
+    copilot --yolo "$@"
 }
 
 copilot() {
