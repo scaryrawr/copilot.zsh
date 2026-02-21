@@ -120,6 +120,7 @@ _copilot() {
         '--autopilot[Enable autopilot continuation in prompt mode]'
         '*--available-tools[Only these tools will be available to the model]:tools'
         '--banner[Show the startup banner]'
+        '--bash-env[Enable BASH_ENV support for bash shells]::value:(on off)'
         '--config-dir[Set the configuration directory]:directory:_directories'
         '--continue[Resume the most recent session]'
         '*--deny-tool[Deny specific tools]:tools'
@@ -140,6 +141,7 @@ _copilot() {
         '--no-alt-screen[Disable the terminal alternate screen buffer]'
         '--no-ask-user[Disable the ask_user tool (agent works autonomously)]'
         '--no-auto-update[Disable downloading CLI update automatically]'
+        '--no-bash-env[Disable BASH_ENV support for bash shells]'
         '--no-color[Disable all color output]'
         '--no-custom-instructions[Disable loading of custom instructions from AGENTS.md]'
         '--no-experimental[Disable experimental features]'
@@ -184,6 +186,7 @@ _copilot() {
 
     # Fallback list; prefer dynamic extraction from `copilot --help` at completion time.
     models=(
+        'claude-sonnet-4.6:Claude Sonnet 4.6'
         'claude-sonnet-4.5:Claude Sonnet 4.5'
         'claude-haiku-4.5:Claude Haiku 4.5'
         'claude-opus-4.6:Claude Opus 4.6'
@@ -197,7 +200,6 @@ _copilot() {
         'gpt-5.1-codex-max:GPT-5.1 Codex Max'
         'gpt-5.1-codex:GPT-5.1 Codex'
         'gpt-5.1:GPT-5.1'
-        'gpt-5:GPT-5'
         'gpt-5.1-codex-mini:GPT-5.1 Codex Mini'
         'gpt-5-mini:GPT-5 Mini'
         'gpt-4.1:GPT-4.1'
