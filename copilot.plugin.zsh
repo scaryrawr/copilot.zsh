@@ -10,5 +10,5 @@ yopilot() {
 }
 
 copilot() {
-    command copilot --disable-mcp-server github-mcp-server "$@"
+    command copilot "$@"
 }
