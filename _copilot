@@ -101,7 +101,7 @@ _copilot__complete_marketplaces() {
 }
 
 _copilot() {
-    local -a options commands help_topics log_levels models stream_modes
+    local -a options commands help_topics log_levels models reasoning_efforts stream_modes
 
     options=(
         '--acp[Start as Agent Client Protocol server]'
@@ -150,6 +150,7 @@ _copilot() {
         '--plain-diff[Disable rich diff rendering]'
         '(-p --prompt)'{-p,--prompt}'[Execute a prompt in non-interactive mode]:prompt'
         '*--plugin-dir[Load a plugin from a local directory]:directory:_directories'
+        '--reasoning-effort[Set the reasoning effort level]:level:->reasoning_efforts'
         '--resume[Resume from a previous session]::session_id'
         '*--secret-env-vars[Environment variables to redact from output]:variable'
         '(-s --silent)'{-s,--silent}'[Output only the agent response (no stats)]'
@@ -205,9 +206,17 @@ _copilot() {
         'gpt-5.1-codex-max:GPT-5.1 Codex Max'
         'gpt-5.1-codex:GPT-5.1 Codex'
         'gpt-5.1:GPT-5.1'
+        'gpt-5.4-mini:GPT-5.4 Mini'
         'gpt-5.1-codex-mini:GPT-5.1 Codex Mini'
         'gpt-5-mini:GPT-5 Mini'
         'gpt-4.1:GPT-4.1'
+    )
+
+    reasoning_efforts=(
+        'low:Low reasoning effort'
+        'medium:Medium reasoning effort'
+        'high:High reasoning effort'
+        'xhigh:Extra high reasoning effort'
     )
 
     stream_modes=(
@@ -331,6 +340,9 @@ _copilot() {
             else
                 _describe -t models 'AI models' models
             fi
+            ;;
+        reasoning_efforts)
+            _describe -t reasoning-efforts 'reasoning effort levels' reasoning_efforts
             ;;
         stream_modes)
             _describe -t stream-modes 'streaming modes' stream_modes
