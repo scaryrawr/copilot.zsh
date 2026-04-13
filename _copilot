@@ -8,23 +8,46 @@ _copilot__models_from_help() {
     local capturing=0
 
     help="$(_call_program copilot-help copilot --help 2>/dev/null)"
-    [[ -z $help ]] && return 0
+    if [[ -n $help ]]; then
+        for line in "${(@f)help}"; do
+            if (( !capturing )) && [[ $line == *"--model <model>"*"(choices:"* ]]; then
+                capturing=1
+            fi
+            if (( capturing )); then
+                rest="$line"
+                while [[ $rest =~ '"([^"]+)"' ]]; do
+                    out+=("${match[1]}")
+                    rest=${rest#*\"${match[1]}\"}
+                done
+                [[ $line == *")"* ]] && break
+            fi
+        done
+    fi
 
-    for line in "${(@f)help}"; do
-        if (( !capturing )) && [[ $line == *"--model <model>"*"(choices:"* ]]; then
-            capturing=1
-        fi
-        if (( capturing )); then
-            rest="$line"
-            while [[ $rest =~ '"([^"]+)"' ]]; do
-                out+=("${match[1]}")
-                rest=${rest#*\"${match[1]}\"}
-            done
-            [[ $line == *")"* ]] && break
-        fi
-    done
+    if (( ! ${#out} )); then
+        help="$(_call_program copilot-config-help copilot help config 2>/dev/null)"
+        capturing=0
 
-    (( ${#out} )) && print -l -- $out
+        for line in "${(@f)help}"; do
+            if (( !capturing )) && [[ $line == *'`model`:'* ]]; then
+                capturing=1
+                continue
+            fi
+            if (( capturing )); then
+                if [[ $line == '    - "'*'"' ]]; then
+                    rest="$line"
+                    while [[ $rest =~ '"([^"]+)"' ]]; do
+                        out+=("${match[1]}")
+                        rest=${rest#*\"${match[1]}\"}
+                    done
+                elif [[ $line == '  `'* ]]; then
+                    break
+                fi
+            fi
+        done
+    fi
+
+    (( ${#out} )) && print -l -- ${(u)out}
 }
 
 _copilot__installed_plugins() {
@@ -101,9 +124,10 @@ _copilot__complete_marketplaces() {
 }
 
 _copilot() {
-    local -a options commands help_topics log_levels models reasoning_efforts stream_modes
+    local -a options commands help_topics agent_modes log_levels models reasoning_efforts stream_modes
 
     options=(
+        '(--effort --reasoning-effort)--effort[Set the reasoning effort level]:level:->reasoning_efforts'
         '--acp[Start as Agent Client Protocol server]'
         '*--add-dir[Add a directory to the allowed list for file access]:directory:_directories'
         '*--add-github-mcp-tool[Add a tool to enable for the GitHub MCP server]:tool'
@@ -114,31 +138,31 @@ _copilot() {
         '--allow-all-paths[Disable file path verification and allow access to any path]'
         '--allow-all-tools[Allow all tools to run automatically without confirmation]'
         '--allow-all-urls[Allow access to all URLs without confirmation]'
-        '*--allow-tool[Allow specific tools]:tools'
-        '*--allow-url[Allow access to specific URLs or domains]:url'
-        '--alt-screen[Use the terminal alternate screen buffer]::mode:(on off)'
-        '--autopilot[Enable autopilot continuation in prompt mode]'
-        '*--available-tools[Only these tools will be available to the model]:tools'
+        '*--allow-tool[Allow specific tools]::tools'
+        '*--allow-url[Allow access to specific URLs or domains]::url'
+        '--autopilot[Start in autopilot mode]'
+        '*--available-tools[Only these tools will be available to the model]::tools'
         '--banner[Show the startup banner]'
         '--bash-env[Enable BASH_ENV support for bash shells]::value:(on off)'
         '--config-dir[Set the configuration directory]:directory:_directories'
         '--continue[Resume the most recent session]'
-        '*--deny-tool[Deny specific tools]:tools'
-        '*--deny-url[Deny access to specific URLs or domains]:url'
+        '*--deny-tool[Deny specific tools]::tools'
+        '*--deny-url[Deny access to specific URLs or domains]::url'
         '--disable-builtin-mcps[Disable all built-in MCP servers]'
         '*--disable-mcp-server[Disable a specific MCP server]:server'
         '--disallow-temp-dir[Prevent automatic access to the system temporary directory]'
         '--enable-all-github-mcp-tools[Enable all GitHub MCP server tools]'
-        '*--excluded-tools[These tools will not be available to the model]:tools'
+        '--enable-reasoning-summaries[Request reasoning summaries for OpenAI models]'
+        '*--excluded-tools[These tools will not be available to the model]::tools'
         '--experimental[Enable experimental features]'
         '(-h --help)'{-h,--help}'[Display help for command]'
         '(-i --interactive)'{-i,--interactive}'[Start interactive mode and automatically execute this prompt]:prompt'
         '--log-dir[Set log file directory]:directory:_directories'
         '--log-level[Set the log level]:level:->log_levels'
         '--max-autopilot-continues[Maximum continuation messages in autopilot mode]:count'
+        '--mode[Set the initial agent mode]:mode:->agent_modes'
         '--model[Set the AI model to use]:model:->models'
         '--mouse[Enable mouse support in alt screen mode]::value:(on off)'
-        '--no-alt-screen[Disable the terminal alternate screen buffer]'
         '--no-ask-user[Disable the ask_user tool (agent works autonomously)]'
         '--no-auto-update[Disable downloading CLI update automatically]'
         '--no-bash-env[Disable BASH_ENV support for bash shells]'
@@ -148,11 +172,12 @@ _copilot() {
         '--no-mouse[Disable mouse support in alt screen mode]'
         '--output-format[Set the output format]:format:(text json)'
         '--plain-diff[Disable rich diff rendering]'
+        '--plan[Start in plan mode]'
         '(-p --prompt)'{-p,--prompt}'[Execute a prompt in non-interactive mode]:prompt'
         '*--plugin-dir[Load a plugin from a local directory]:directory:_directories'
-        '--reasoning-effort[Set the reasoning effort level]:level:->reasoning_efforts'
+        '(--effort --reasoning-effort)--reasoning-effort[Set the reasoning effort level]:level:->reasoning_efforts'
         '--resume[Resume from a previous session]::session_id'
-        '*--secret-env-vars[Environment variables to redact from output]:variable'
+        '*--secret-env-vars[Environment variables to redact from output]::variable'
         '(-s --silent)'{-s,--silent}'[Output only the agent response (no stats)]'
         '--screen-reader[Enable screen reader optimizations]'
         '--share[Share session to markdown file after completion]::path:_files'
@@ -166,6 +191,7 @@ _copilot() {
         'help:Display help information'
         'init:Initialize Copilot instructions'
         'login:Authenticate with Copilot'
+        'mcp:Manage MCP servers'
         'plugin:Manage plugins'
         'update:Download the latest version'
         'version:Display version information'
@@ -176,7 +202,15 @@ _copilot() {
         'config:Configuration Settings'
         'environment:Environment Variables'
         'logging:Logging'
+        'monitoring:Monitoring with OpenTelemetry'
         'permissions:Permissions'
+        'providers:Custom Model Providers (BYOK)'
+    )
+
+    agent_modes=(
+        'interactive:Start in interactive mode'
+        'plan:Start in plan mode'
+        'autopilot:Start in autopilot mode'
     )
 
     log_levels=(
@@ -198,16 +232,12 @@ _copilot() {
         'claude-opus-4.6-fast:Claude Opus 4.6 (fast mode)'
         'claude-opus-4.5:Claude Opus 4.5'
         'claude-sonnet-4:Claude Sonnet 4'
-        'gemini-3-pro-preview:Gemini 3 Pro Preview'
         'gpt-5.4:GPT-5.4'
         'gpt-5.3-codex:GPT-5.3 Codex'
         'gpt-5.2-codex:GPT-5.2 Codex'
         'gpt-5.2:GPT-5.2'
-        'gpt-5.1-codex-max:GPT-5.1 Codex Max'
-        'gpt-5.1-codex:GPT-5.1 Codex'
         'gpt-5.1:GPT-5.1'
         'gpt-5.4-mini:GPT-5.4 Mini'
-        'gpt-5.1-codex-mini:GPT-5.1 Codex Mini'
         'gpt-5-mini:GPT-5 Mini'
         'gpt-4.1:GPT-4.1'
     )
@@ -224,10 +254,46 @@ _copilot() {
         'off:Disable streaming'
     )
 
-    local -a command_options plugin_commands plugin_marketplace_commands login_options plugin_options
+    local -a command_options login_options mcp_add_options mcp_commands mcp_get_options mcp_list_options mcp_options
+    local -a plugin_commands plugin_marketplace_commands plugin_options
 
     command_options=(
         '(-h --help)'{-h,--help}'[Display help for command]'
+    )
+
+    mcp_commands=(
+        'add:Add an MCP server'
+        'get:Show server details'
+        'help:Display help for command'
+        'list:List configured MCP servers'
+        'remove:Remove an MCP server'
+    )
+
+    mcp_options=(
+        '--config-dir[Path to the configuration directory]:directory:_directories'
+        '(-h --help)'{-h,--help}'[Display help for command]'
+    )
+
+    mcp_add_options=(
+        $mcp_options
+        '*--env[Environment variable]:env'
+        '*--header[HTTP header for remote servers]:header'
+        '--json[Output added config as JSON]'
+        '--show-secrets[Show full environment variable and header values in output]'
+        '--timeout[Timeout in milliseconds]:ms'
+        '--tools[Tool filter]:tools'
+        '--transport[Server transport]:transport:(stdio http sse)'
+    )
+
+    mcp_get_options=(
+        $mcp_options
+        '--json[Output as JSON]'
+        '--show-secrets[Show full environment variable and header values]'
+    )
+
+    mcp_list_options=(
+        $mcp_options
+        '--json[Output as JSON]'
     )
 
     plugin_commands=(
@@ -280,6 +346,35 @@ _copilot() {
                 login)
                     _arguments $login_options
                     ;;
+                mcp)
+                    case $words[2] in
+                        -*)
+                            _arguments $mcp_options
+                            ;;
+                        add)
+                            _arguments $mcp_add_options ':name:' '*::url-or-command-and-args:'
+                            ;;
+                        get)
+                            _arguments $mcp_get_options ':name:'
+                            ;;
+                        help)
+                            if [[ $words[3] == -* ]]; then
+                                _arguments $command_options
+                            else
+                                _describe -t mcp-commands 'mcp commands' mcp_commands
+                            fi
+                            ;;
+                        list)
+                            _arguments $mcp_list_options
+                            ;;
+                        remove)
+                            _arguments $mcp_options ':name:'
+                            ;;
+                        *)
+                            _describe -t mcp-commands 'mcp commands' mcp_commands
+                            ;;
+                    esac
+                    ;;
                 plugin)
                     case $words[2] in
                         -*)
@@ -328,6 +423,9 @@ _copilot() {
                     esac
                     ;;
             esac
+            ;;
+        agent_modes)
+            _describe -t agent-modes 'agent modes' agent_modes
             ;;
         log_levels)
             _describe -t log-levels 'log levels' log_levels
