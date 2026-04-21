@@ -145,6 +145,7 @@ _copilot() {
         '--banner[Show the startup banner]'
         '--bash-env[Enable BASH_ENV support for bash shells]::value:(on off)'
         '--config-dir[Set the configuration directory]:directory:_directories'
+        '--connect[Connect directly to a remote session]::session_id'
         '--continue[Resume the most recent session]'
         '*--deny-tool[Deny specific tools]::tools'
         '*--deny-url[Deny access to specific URLs or domains]::url'
@@ -170,11 +171,13 @@ _copilot() {
         '--no-custom-instructions[Disable loading of custom instructions from AGENTS.md]'
         '--no-experimental[Disable experimental features]'
         '--no-mouse[Disable mouse support in alt screen mode]'
+        '--no-remote[Disable remote control of your session from GitHub web and mobile]'
         '--output-format[Set the output format]:format:(text json)'
         '--plain-diff[Disable rich diff rendering]'
         '--plan[Start in plan mode]'
         '(-p --prompt)'{-p,--prompt}'[Execute a prompt in non-interactive mode]:prompt'
         '*--plugin-dir[Load a plugin from a local directory]:directory:_directories'
+        '--remote[Enable remote control of your session from GitHub web and mobile]'
         '(--effort --reasoning-effort)--reasoning-effort[Set the reasoning effort level]:level:->reasoning_efforts'
         '--resume[Resume from a previous session]::session_id'
         '*--secret-env-vars[Environment variables to redact from output]::variable'
@@ -228,6 +231,7 @@ _copilot() {
         'claude-sonnet-4.6:Claude Sonnet 4.6'
         'claude-sonnet-4.5:Claude Sonnet 4.5'
         'claude-haiku-4.5:Claude Haiku 4.5'
+        'claude-opus-4.7:Claude Opus 4.7'
         'claude-opus-4.6:Claude Opus 4.6'
         'claude-opus-4.6-fast:Claude Opus 4.6 (fast mode)'
         'claude-opus-4.5:Claude Opus 4.5'
@@ -254,7 +258,8 @@ _copilot() {
         'off:Disable streaming'
     )
 
-    local -a command_options login_options mcp_add_options mcp_commands mcp_get_options mcp_list_options mcp_options
+    local -a command_options login_options mcp_add_options mcp_command_options mcp_commands
+    local -a mcp_get_options mcp_list_options mcp_options plugin_command_options
     local -a plugin_commands plugin_marketplace_commands plugin_options
 
     command_options=(
@@ -270,12 +275,16 @@ _copilot() {
     )
 
     mcp_options=(
+        '(-h --help)'{-h,--help}'[Display help for command]'
+    )
+
+    mcp_command_options=(
         '--config-dir[Path to the configuration directory]:directory:_directories'
         '(-h --help)'{-h,--help}'[Display help for command]'
     )
 
     mcp_add_options=(
-        $mcp_options
+        $mcp_command_options
         '*--env[Environment variable]:env'
         '*--header[HTTP header for remote servers]:header'
         '--json[Output added config as JSON]'
@@ -286,13 +295,13 @@ _copilot() {
     )
 
     mcp_get_options=(
-        $mcp_options
+        $mcp_command_options
         '--json[Output as JSON]'
         '--show-secrets[Show full environment variable and header values]'
     )
 
     mcp_list_options=(
-        $mcp_options
+        $mcp_command_options
         '--json[Output as JSON]'
     )
 
@@ -309,6 +318,7 @@ _copilot() {
         'browse:Browse plugins in a marketplace'
         'list:List registered marketplaces'
         'remove:Remove a marketplace'
+        'update:Update marketplace plugin catalogs'
     )
 
     login_options=(
@@ -318,6 +328,10 @@ _copilot() {
     )
 
     plugin_options=(
+        '(-h --help)'{-h,--help}'[Display help for command]'
+    )
+
+    plugin_command_options=(
         '--config-dir[Path to the configuration directory]:directory:_directories'
         '(-h --help)'{-h,--help}'[Display help for command]'
     )
@@ -368,7 +382,7 @@ _copilot() {
                             _arguments $mcp_list_options
                             ;;
                         remove)
-                            _arguments $mcp_options ':name:'
+                            _arguments $mcp_command_options ':name:'
                             ;;
                         *)
                             _describe -t mcp-commands 'mcp commands' mcp_commands
@@ -381,16 +395,16 @@ _copilot() {
                             _arguments $plugin_options
                             ;;
                         install)
-                            _arguments $plugin_options ':source:_copilot__complete_installable_plugins'
+                            _arguments $plugin_command_options ':source:_copilot__complete_installable_plugins'
                             ;;
                         uninstall)
-                            _arguments $plugin_options ':name:_copilot__complete_installed_plugins'
+                            _arguments $plugin_command_options ':name:_copilot__complete_installed_plugins'
                             ;;
                         update)
-                            _arguments $plugin_options ':name:_copilot__complete_installed_plugins'
+                            _arguments $plugin_command_options ':name:_copilot__complete_installed_plugins'
                             ;;
                         list)
-                            _arguments $plugin_options
+                            _arguments $plugin_command_options
                             ;;
                         marketplace)
                             case $words[3] in
@@ -398,19 +412,22 @@ _copilot() {
                                     _arguments $plugin_options
                                     ;;
                                 add)
-                                    _arguments $plugin_options ':source:'
+                                    _arguments $plugin_command_options ':source:'
                                     ;;
                                 remove)
                                     _arguments \
                                         '(-f --force)'{-f,--force}'[Force removal even if plugins are installed]' \
-                                        $plugin_options \
+                                        $plugin_command_options \
                                         ':name:_copilot__complete_marketplaces'
                                     ;;
                                 list)
-                                    _arguments $plugin_options
+                                    _arguments $plugin_command_options
                                     ;;
                                 browse)
-                                    _arguments $plugin_options ':name:_copilot__complete_marketplaces'
+                                    _arguments $plugin_command_options ':name:_copilot__complete_marketplaces'
+                                    ;;
+                                update)
+                                    _arguments $plugin_command_options '::name:_copilot__complete_marketplaces'
                                     ;;
                                 *)
                                     _describe -t plugin-marketplace-commands 'plugin marketplace commands' plugin_marketplace_commands
