@@ -164,6 +164,7 @@ _copilot() {
         '--mode[Set the initial agent mode]:mode:->agent_modes'
         '--model[Set the AI model to use]:model:->models'
         '--mouse[Enable mouse support in alt screen mode]::value:(on off)'
+        '(-n --name)'{-n,--name}'[Set a name for the new session]:name'
         '--no-ask-user[Disable the ask_user tool (agent works autonomously)]'
         '--no-auto-update[Disable downloading CLI update automatically]'
         '--no-bash-env[Disable BASH_ENV support for bash shells]'
@@ -191,6 +192,7 @@ _copilot() {
     )
 
     commands=(
+        'completion:Generate a shell completion script'
         'help:Display help information'
         'init:Initialize Copilot instructions'
         'login:Authenticate with Copilot'
@@ -236,6 +238,7 @@ _copilot() {
         'claude-opus-4.6-fast:Claude Opus 4.6 (fast mode)'
         'claude-opus-4.5:Claude Opus 4.5'
         'claude-sonnet-4:Claude Sonnet 4'
+        'gpt-5.5:GPT-5.5'
         'gpt-5.4:GPT-5.4'
         'gpt-5.3-codex:GPT-5.3 Codex'
         'gpt-5.2-codex:GPT-5.2 Codex'
@@ -258,12 +261,18 @@ _copilot() {
         'off:Disable streaming'
     )
 
-    local -a command_options login_options mcp_add_options mcp_command_options mcp_commands
+    local -a command_options completion_shells login_options mcp_add_options mcp_command_options mcp_commands
     local -a mcp_get_options mcp_list_options mcp_options plugin_command_options
     local -a plugin_commands plugin_marketplace_commands plugin_options
 
     command_options=(
         '(-h --help)'{-h,--help}'[Display help for command]'
+    )
+
+    completion_shells=(
+        'bash:Bash completion script'
+        'zsh:Zsh completion script'
+        'fish:Fish completion script'
     )
 
     mcp_commands=(
@@ -353,6 +362,14 @@ _copilot() {
                     else
                         _describe -t help-topics 'help topics' help_topics
                     fi
+                    ;;
+                completion)
+                    _arguments $command_options ':shell:->completion_shells'
+                    case $state in
+                        completion_shells)
+                            _describe -t shells 'shells' completion_shells
+                            ;;
+                    esac
                     ;;
                 init)
                     _arguments $command_options
