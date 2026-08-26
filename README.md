@@ -10,7 +10,7 @@ Fish and Zsh completions and convenience functions for
 Clone this repository into `~/.oh-my-zsh/custom/plugins/copilot`:
 
 ```zsh
-git clone https://github.com/scaryrawr/copilot.zsh ~/.oh-my-zsh/custom/plugins/copilot
+git clone https://github.com/scaryrawr/copilot-completions ~/.oh-my-zsh/custom/plugins/copilot
 ```
 
 Then add `copilot` to your plugins in `~/.zshrc`:
@@ -24,14 +24,14 @@ plugins=(... copilot)
 Clone this repository and source the plugin file:
 
 ```zsh
-git clone https://github.com/scaryrawr/copilot.zsh ~/.zsh/copilot.zsh
+git clone https://github.com/scaryrawr/copilot-completions ~/.zsh/copilot.zsh
 echo 'source ~/.zsh/copilot.zsh/copilot.plugin.zsh' >> ~/.zshrc
 ```
 
 ### antidote
 
 ```zsh
-antidote install scaryrawr/copilot.zsh
+antidote install scaryrawr/copilot-completions
 ```
 
 ## Fish installation
@@ -39,14 +39,14 @@ antidote install scaryrawr/copilot.zsh
 Install with [Fisher](https://github.com/jorgebucaran/fisher):
 
 ```fish
-fisher install scaryrawr/copilot.zsh
+fisher install scaryrawr/copilot-completions
 ```
 
 Existing `scaryrawr/copilot.fish` users can migrate with:
 
 ```fish
 fisher remove scaryrawr/copilot.fish
-fisher install scaryrawr/copilot.zsh
+fisher install scaryrawr/copilot-completions
 ```
 
 ## Features
