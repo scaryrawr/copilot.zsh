@@ -4,8 +4,10 @@ This repository provides Fish and Zsh integrations for GitHub Copilot CLI.
 
 ## Architecture
 
-- `copilot.plugin.zsh` sets up the Zsh plugin and adds the repository root to
-  `fpath`.
+- `copilot-completions.plugin.zsh` is the repository-name entry point used by
+  Zsh plugin managers.
+- `copilot.plugin.zsh` sets up the Zsh plugin, remains compatible with existing
+  manual and Oh My Zsh installs, and adds the repository root to `fpath`.
 - `_copilot` implements Zsh completion with `_arguments` state machines.
 - `completions/copilot.fish` contains Fish completion definitions.
 - `functions/copilot.fish` and `functions/yopilot.fish` are the public Fish
@@ -36,7 +38,7 @@ The live `copilot` help output is their shared source of truth.
 ## Validation
 
 ```sh
-zsh -n _copilot copilot.plugin.zsh
+zsh -n _copilot copilot.plugin.zsh copilot-completions.plugin.zsh
 fish -n completions/copilot.fish
 fish -n functions/*.fish
 ```

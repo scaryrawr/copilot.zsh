@@ -86,7 +86,7 @@ yopilot --model gpt-5.6-sol
 Validate both shell integrations after making changes:
 
 ```sh
-zsh -n _copilot copilot.plugin.zsh
+zsh -n _copilot copilot.plugin.zsh copilot-completions.plugin.zsh
 fish -n completions/copilot.fish
 fish -n functions/*.fish
 ```
