@@ -1,20 +1,42 @@
 # Copilot Instructions
 
-This is a Zsh plugin for GitHub Copilot CLI that provides shell completions and convenience functions.
+This repository provides Fish and Zsh integrations for GitHub Copilot CLI.
 
 ## Architecture
 
-The plugin consists of two files:
-- `copilot.plugin.zsh` - Main plugin entry point that sets up fpath and defines shell functions (`copilot`, `yopilot`)
-- `_copilot` - Zsh completion function that provides tab completion for all copilot CLI options
+- `copilot.plugin.zsh` sets up the Zsh plugin and adds the repository root to
+  `fpath`.
+- `_copilot` implements Zsh completion with `_arguments` state machines.
+- `completions/copilot.fish` contains Fish completion definitions.
+- `functions/copilot.fish` and `functions/yopilot.fish` are the public Fish
+  wrappers.
+- `functions/__fish_copilot_*.fish` dynamically complete models, agents,
+  plugins, marketplaces, MCP servers, skills, and help topics.
 
-## Key Conventions
+The Fish and Zsh completion implementations are handwritten and shell-specific.
+The live `copilot` help output is their shared source of truth.
 
-### Completion Function Structure
-The `_copilot` completion function uses Zsh's `_arguments` completion system with state machines for dynamic completions (models, log levels, stream modes). Model names are dynamically extracted from `copilot --help` output at completion time, with a fallback static list.
+## Conventions
 
-### Plugin Loading
-The plugin uses `0=${(%):-%x}` to get the script's path regardless of how it's sourced, then adds its directory to fpath for completion autoloading.
+### Zsh
 
-### Function Wrappers
-Shell functions wrap the `copilot` command to provide default arguments (e.g., `yopilot` enables YOLO mode with `--allow-all-tools --allow-all-paths`).
+- Use `_arguments` specifications and state machines.
+- Keep `_copilot` at the repository root so it remains autoloadable through
+  `fpath`.
+- Use `0=${(%):-%x}` when resolving the sourced plugin path.
+
+### Fish
+
+- Keep Fisher-discovered files under `completions/` and `functions/`.
+- Use one function per file and match the filename to the function name.
+- Prefix private helpers with `__fish_copilot_`.
+- Give every completion a description and disable file completion when paths
+  are not valid arguments.
+
+## Validation
+
+```sh
+zsh -n _copilot copilot.plugin.zsh
+fish -n completions/copilot.fish
+fish -n functions/*.fish
+```

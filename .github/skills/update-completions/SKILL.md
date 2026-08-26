@@ -1,94 +1,104 @@
 ---
 name: update-completions
 description: >-
-  Update the Zsh completion function (_copilot) to match the current copilot CLI
-  interface. Use this skill when the user asks to update, refresh, or sync
-  completions, or when new copilot CLI options, commands, or models need to be
-  added to the completion file.
-compatibility: Requires copilot CLI installed and available in PATH
+  Update the Fish and Zsh completion implementations to match the current
+  Copilot CLI interface. Use when asked to update, refresh, or sync completions,
+  or when CLI options, commands, models, or help topics change.
+compatibility: Requires copilot CLI, fish, and zsh
 ---
 
 # Update Completions
 
-This skill updates the `_copilot` Zsh completion file to reflect the current
-`copilot` CLI interface.
+Update `_copilot`, `completions/copilot.fish`, and any affected dynamic Fish
+helpers from the same live CLI help capture.
 
-## Steps
+## Gather the current CLI surface
 
-1. **Gather current CLI help output.** Run these commands and capture the output:
+Capture these commands:
 
-   ```sh
-   copilot --help
-   copilot help
-   copilot help config
-   copilot help commands
-   copilot help environment
-   copilot help logging
-   copilot help monitoring
-   copilot help permissions
-   copilot help providers
-   copilot mcp --help
-   copilot mcp add --help
-   copilot mcp get --help
-   copilot mcp list --help
-   copilot mcp remove --help
-   copilot plugin --help
-   copilot plugin install --help
-   copilot plugin marketplace --help
-   copilot plugin marketplace add --help
-   copilot plugin marketplace browse --help
-   copilot plugin marketplace remove --help
-   copilot plugin uninstall --help
-   copilot plugin update --help
-   copilot login --help
-   copilot init --help
-   ```
+```sh
+copilot --help
+copilot help
+copilot help config
+copilot help commands
+copilot help environment
+copilot help logging
+copilot help monitoring
+copilot help permissions
+copilot help providers
+copilot app --help
+copilot completion --help
+copilot init --help
+copilot login --help
+copilot mcp --help
+copilot mcp add --help
+copilot mcp get --help
+copilot mcp list --help
+copilot mcp remove --help
+copilot plugin --help
+copilot plugin install --help
+copilot plugin list --help
+copilot plugin marketplace --help
+copilot plugin marketplace add --help
+copilot plugin marketplace browse --help
+copilot plugin marketplace list --help
+copilot plugin marketplace remove --help
+copilot plugin marketplace update --help
+copilot plugin uninstall --help
+copilot plugin update --help
+copilot plugins --help
+copilot skill --help
+copilot update --help
+copilot version --help
+```
 
-2. **Compare with `_copilot`.** Read the `_copilot` completion file and compare
-   it against the help output. Identify:
-    - New, removed, or renamed **flags/options** (the `options` array)
-    - New, removed, or renamed **subcommands** (the `commands` array and
-      subcommand dispatch in the `args` case)
-    - New, removed, or renamed **help topics** (the `help_topics` array)
-    - New **command families** that need their own completion branches (for
-      example `mcp` and its subcommands/options)
-    - New or removed **models** (the fallback `models` array)
-    - Changes to **log levels** or **stream modes**
-    - New or changed **option aliases** (for example `--effort` alongside
-      `--reasoning-effort`)
-    - New or changed **plugin subcommands**
-    - New or changed **login options**
+Run help for every subcommand advertised by `copilot plugins --help` and
+`copilot skill --help`. Run `copilot help <topic>` for any help topics not
+listed above. Treat the live output as authoritative.
 
-3. **Update `_copilot`.** Apply minimal, surgical edits to bring the completion
-   file in sync. Preserve the existing code style:
-   - Options use Zsh `_arguments` spec format:
-     `'--flag-name[Description]:arg-name:completer'`
-    - Repeatable options are prefixed with `'*'`
-    - Short/long pairs use `'(-s --long)'{-s,--long}'[Desc]'` syntax
-    - Subcommand arrays use `'name:Description'` format
-    - Model entries use `'model-id:Display Name'` format
-    - For mutually synonymous options, use Zsh exclusion groups like
-      `'(--effort --reasoning-effort)--effort[...]'`
+## Update both implementations
 
-4. **Update `copilot.plugin.zsh` if needed.** If new wrapper functions or fpath
-   changes are warranted by CLI changes, update the plugin file too.
+Compare the captured interface against:
 
-5. **Verify.** After editing:
-   - Run `zsh -n _copilot copilot.plugin.zsh`
-   - Read back the modified file(s) to confirm the changes are syntactically
-     correct and consistent with the surrounding code
+- `_copilot`
+- `completions/copilot.fish`
+- `functions/__fish_copilot_*.fish`
 
-## Important Notes
+Keep options, aliases, commands, help topics, models, log levels, reasoning
+efforts, stream modes, plugin commands, login modes, and dynamic argument
+helpers aligned.
 
-- The `_copilot__models_from_help` function dynamically extracts models from
-  `copilot --help` at completion time. The static `models` array is only a
-  **fallback** — update it to stay reasonably current but do not remove the
-  dynamic extraction logic.
-- Do not assume the `copilot help` topic list is fixed. Treat `copilot --help`
-  or `copilot help` as the source of truth for which help topics currently
-  exist.
-- Do **not** remove or alter the `_copilot__installed_plugins`,
-  `_copilot__marketplaces`, `_copilot__browsable_plugins`, or
-  `_copilot__installable_plugins` helper functions unless the CLI changes
-  require it. These provide live dynamic completions.
-- Keep the guard at the bottom: `if (( $+compstate )); then _copilot "$@"; fi`
+For Zsh:
+
+- Use `_arguments` specifications.
+- Prefix repeatable options with `*`.
+- Use exclusion groups for aliases or mutually exclusive options.
+- Preserve dynamic model, plugin, and marketplace helpers.
+- Keep the completion-context guard at the bottom of `_copilot`.
+
+For Fish:
+
+- Use `-x` for exclusive arguments, `-r` for required arguments, and `-f` when
+  file completion is inappropriate.
+- Give every completion a `-d` description.
+- Keep private dynamic helpers under `functions/__fish_copilot_*.fish`.
+- Update fallback models in `functions/__fish_copilot_models.fish`.
+
+Do not introduce a shared completion schema or generator. Each shell should
+remain idiomatic.
+
+## Verify
+
+```sh
+zsh -n _copilot copilot.plugin.zsh
+fish -n completions/copilot.fish
+fish -n functions/*.fish
+fish -c 'source completions/copilot.fish
+complete -C"copilot --mo"
+complete -C"copilot help "
+complete -C"copilot mcp "
+complete -C"copilot plugin marketplace "'
+```
+
+Read back every modified file and confirm both shells represent the same live
+CLI surface.

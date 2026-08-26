@@ -1,8 +1,9 @@
-# copilot.zsh
+# Copilot shell plugins
 
-Zsh plugin for [GitHub Copilot CLI](https://github.com/features/copilot/cli/).
+Fish and Zsh completions and convenience functions for
+[GitHub Copilot CLI](https://github.com/features/copilot/cli/).
 
-## Installation
+## Zsh installation
 
 ### Oh My Zsh
 
@@ -33,38 +34,61 @@ echo 'source ~/.zsh/copilot.zsh/copilot.plugin.zsh' >> ~/.zshrc
 antidote install scaryrawr/copilot.zsh
 ```
 
+## Fish installation
+
+Install with [Fisher](https://github.com/jorgebucaran/fisher):
+
+```fish
+fisher install scaryrawr/copilot.zsh
+```
+
+Existing `scaryrawr/copilot.fish` users can migrate with:
+
+```fish
+fisher remove scaryrawr/copilot.fish
+fisher install scaryrawr/copilot.zsh
+```
+
 ## Features
 
 ### Completions
 
-Full command-line completions for the `copilot` command, including:
+Full command-line completions for `copilot`, including:
 
-- All command-line options and flags
-- Model selection (`--model`, dynamically extracted from `copilot --help`)
-- Log levels (`--log-level`)
-- Streaming options (`--stream`)
-- Help topics
-- Directory completions for `--add-dir` and `--log-dir`
+- Command-line options, commands, and aliases
+- Dynamic model, plugin, marketplace, MCP server, skill, and agent values
+- Log levels, reasoning effort levels, and streaming modes
+- File and directory arguments
 
-### YOLO Mode
+### YOLO mode
 
-The `yopilot` function provides a convenient wrapper that runs Copilot in "YOLO mode" with all permissions enabled:
+The `yopilot` function runs Copilot with all permissions enabled:
 
-```zsh
+```sh
 yopilot
 ```
 
 This is equivalent to:
 
-```zsh
-copilot --allow-all-tools --allow-all-paths
+```sh
+copilot --yolo
 ```
 
-You can still pass additional arguments:
+Additional arguments are forwarded to Copilot:
 
-```zsh
+```sh
 yopilot -p "fix all the bugs"
-yopilot --model gpt-5
+yopilot --model gpt-5.6-sol
+```
+
+## Development
+
+Validate both shell integrations after making changes:
+
+```sh
+zsh -n _copilot copilot.plugin.zsh
+fish -n completions/copilot.fish
+fish -n functions/*.fish
 ```
 
 ## License
