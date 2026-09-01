@@ -61,6 +61,7 @@ complete -c copilot -l no-auto-update -d 'Disable downloading CLI update automat
 complete -c copilot -l no-bash-env -d 'Disable BASH_ENV support for bash shells'
 complete -c copilot -l no-color -d 'Disable all color output'
 complete -c copilot -l no-custom-instructions -d 'Disable loading of custom instructions from AGENTS.md and related files'
+complete -c copilot -l no-eager-powershell-resolution -d 'Disable background PowerShell prompt resolution on Windows'
 complete -c copilot -s p -l prompt -r -f -d 'Execute a prompt in non-interactive mode (exits after completion)'
 complete -c copilot -l output-format -xa 'text json' -d 'Output format: ''text'' (default) or ''json'' (JSONL, one JSON object per line)'
 complete -c copilot -l plain-diff -d 'Disable rich diff rendering (syntax highlighting via diff tool specified by git config)'

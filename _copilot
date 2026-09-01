@@ -178,6 +178,7 @@ _copilot() {
         '--no-bash-env[Disable BASH_ENV support for bash shells]'
         '--no-color[Disable all color output]'
         '--no-custom-instructions[Disable loading of custom instructions from AGENTS.md]'
+        '--no-eager-powershell-resolution[Disable background PowerShell prompt resolution on Windows]'
         '--no-experimental[Disable experimental features]'
         '--no-mouse[Disable mouse support in alt screen mode]'
         '--no-remote[Disable remote control of your session from GitHub web and mobile]'
